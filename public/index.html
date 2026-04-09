@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Warmup Tool</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">&#9993;</span>
+      <span class="logo-text">WarmUp</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+      <li><a href="#" class="nav-link" data-page="accounts">Accounts</a></li>
+      <li><a href="#" class="nav-link" data-page="campaigns">Campaigns</a></li>
+    </ul>
+  </nav>
+
+  <main class="content">
+    <!-- Dashboard Page -->
+    <div id="page-dashboard" class="page active">
+      <h1>Dashboard</h1>
+      <div class="stats-grid" id="overview-stats">
+        <div class="stat-card"><div class="stat-value" id="stat-accounts">—</div><div class="stat-label">Accounts</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-campaigns">—</div><div class="stat-label">Campaigns</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-sent">—</div><div class="stat-label">Emails Sent</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-reply-rate">—</div><div class="stat-label">Reply Rate</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-rescued">—</div><div class="stat-label">Spam Rescued</div></div>
+      </div>
+
+      <h2>Deliverability Health</h2>
+      <div id="health-list" class="health-list"></div>
+    </div>
+
+    <!-- Accounts Page -->
+    <div id="page-accounts" class="page">
+      <div class="page-header">
+        <h1>Email Accounts</h1>
+        <button class="btn btn-primary" id="btn-add-account">+ Add Account</button>
+      </div>
+      <div id="accounts-list" class="card-list"></div>
+    </div>
+
+    <!-- Campaigns Page -->
+    <div id="page-campaigns" class="page">
+      <div class="page-header">
+        <h1>Warmup Campaigns</h1>
+        <button class="btn btn-primary" id="btn-add-campaign">+ New Campaign</button>
+      </div>
+      <div id="campaigns-list" class="card-list"></div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Modal</h2>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Campaign Detail Panel -->
+  <div id="campaign-detail" class="detail-panel hidden">
+    <div class="detail-header">
+      <button class="btn btn-ghost" id="btn-back">&larr; Back</button>
+      <h2 id="detail-title"></h2>
+      <div class="detail-actions">
+        <button class="btn btn-secondary" id="btn-trigger">Run Cycle Now</button>
+        <button class="btn btn-secondary" id="btn-process-inbox">Process Inbox</button>
+      </div>
+    </div>
+    <div class="stats-grid" id="detail-stats"></div>
+    <h3>Daily Progress</h3>
+    <canvas id="stats-chart" height="100"></canvas>
+    <h3>Recent Emails</h3>
+    <table class="emails-table">
+      <thead><tr><th>Sent At</th><th>From</th><th>To</th><th>Subject</th><th>Replied</th></tr></thead>
+      <tbody id="emails-tbody"></tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
