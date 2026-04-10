@@ -141,7 +141,14 @@ document.getElementById('btn-add-account').addEventListener('click', () => {
     <div class="form-group"><label>Password / App Password</label><input id="f-pass" type="password" /></div>
     <div class="form-row">
       <div class="form-group"><label>SMTP Host</label><input id="f-smtp-host" placeholder="smtp.gmail.com" /></div>
-      <div class="form-group"><label>SMTP Port</label><input id="f-smtp-port" type="number" value="587" /></div>
+      <div class="form-group"><label>SMTP Port</label><input id="f-smtp-port" type="number" value="465" /></div>
+    </div>
+    <div class="form-group">
+      <label>SMTP Security</label>
+      <select id="f-smtp-secure">
+        <option value="1" selected>SSL (port 465) — recommended for Railway</option>
+        <option value="0">TLS/STARTTLS (port 587)</option>
+      </select>
     </div>
     <div class="form-row">
       <div class="form-group"><label>IMAP Host</label><input id="f-imap-host" placeholder="imap.gmail.com" /></div>
@@ -160,10 +167,11 @@ async function submitAccount() {
     email:     document.getElementById('f-email').value.trim(),
     username:  document.getElementById('f-user').value.trim(),
     password:  document.getElementById('f-pass').value,
-    smtp_host: document.getElementById('f-smtp-host').value.trim(),
-    smtp_port: parseInt(document.getElementById('f-smtp-port').value),
-    imap_host: document.getElementById('f-imap-host').value.trim(),
-    imap_port: parseInt(document.getElementById('f-imap-port').value),
+    smtp_host:   document.getElementById('f-smtp-host').value.trim(),
+    smtp_port:   parseInt(document.getElementById('f-smtp-port').value),
+    smtp_secure: parseInt(document.getElementById('f-smtp-secure').value),
+    imap_host:   document.getElementById('f-imap-host').value.trim(),
+    imap_port:   parseInt(document.getElementById('f-imap-port').value),
   };
   try {
     await api('/api/accounts', { method: 'POST', body });
