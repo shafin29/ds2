@@ -89,8 +89,27 @@ router.post('/:id/test', async (req, res) => {
   const account = db.prepare('SELECT * FROM accounts WHERE id = ?').get(req.params.id);
   if (!account) return res.status(404).json({ error: 'Account not found.' });
 
-  const [smtp, imap] = await Promise.all([testSmtp(account), testImap(account)]);
-  res.json({ smtp, imap });
+  // Hard 15s deadline for the whole test
+  const timeout = setTimeout(() => {
+    if (!res.headersSent) {
+      res.json({
+        smtp: { ok: false, error: 'Connection timed out — port may be blocked by the hosting provider' },
+        imap: { ok: false, error: 'Connection timed out' },
+      });
+    }
+  }, 15000);
+
+  try {
+    const [smtp, imap] = await Promise.all([testSmtp(account), testImap(account)]);
+    clearTimeout(timeout);
+    if (!res.headersSent) res.json({ smtp, imap });
+  } catch (err) {
+    clearTimeout(timeout);
+    if (!res.headersSent) res.json({
+      smtp: { ok: false, error: err.message },
+      imap: { ok: false, error: err.message },
+    });
+  }
 });
 
 module.exports = router;
