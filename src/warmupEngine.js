@@ -12,29 +12,43 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('./db');
 const { sendWarmupEmail, processInbox } = require('./emailService');
 
+// Prevent concurrent warmup cycles running at the same time
+let cycleRunning = false;
+let inboxRunning = false;
+
 /**
- * Run one warmup cycle. Called by the scheduler every hour (or manually).
+ * Run one warmup cycle. Called by the scheduler every 20min (or manually).
  * @param {boolean} force - skip time window check (for manual triggers)
  */
 async function runWarmupCycle(force = false) {
-  const today = new Date().toISOString().slice(0, 10);
-  const currentHour = new Date().getHours();
+  if (cycleRunning) {
+    console.log('[Engine] Warmup cycle already running, skipping.');
+    return;
+  }
+  cycleRunning = true;
 
-  // Fetch all active campaigns
-  const campaigns = db.prepare(`
-    SELECT c.*, a.* ,
-           c.id AS campaign_id, a.id AS account_id
-    FROM campaigns c
-    JOIN accounts a ON a.id = c.account_id
-    WHERE c.status = 'active' AND a.active = 1
-  `).all();
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const currentHour = new Date().getHours();
 
-  for (const campaign of campaigns) {
-    try {
-      await processCampaign(campaign, today, currentHour, force);
-    } catch (err) {
-      console.error(`[Engine] Error processing campaign ${campaign.campaign_id}:`, err.message);
+    // Fetch all active campaigns
+    const campaigns = db.prepare(`
+      SELECT c.*, a.* ,
+             c.id AS campaign_id, a.id AS account_id
+      FROM campaigns c
+      JOIN accounts a ON a.id = c.account_id
+      WHERE c.status = 'active' AND a.active = 1
+    `).all();
+
+    for (const campaign of campaigns) {
+      try {
+        await processCampaign(campaign, today, currentHour, force);
+      } catch (err) {
+        console.error(`[Engine] Error processing campaign ${campaign.campaign_id}:`, err.message);
+      }
     }
+  } finally {
+    cycleRunning = false;
   }
 }
 
@@ -72,9 +86,9 @@ async function processCampaign(campaign, today, currentHour, force = false) {
     return;
   }
 
-  // How many to send this cycle (spread across the day: send ~1-3 at a time)
+  // Send exactly 1 email per cycle — natural pacing across the day
   const remaining = campaign.daily_target - campaign.emails_sent_today;
-  const sendNow = Math.min(remaining, Math.floor(Math.random() * 3) + 1);
+  const sendNow = Math.min(remaining, 1);
 
   // Get pool accounts (active pool/receiver accounts only)
   const pool = db.prepare(`
@@ -134,7 +148,13 @@ async function processCampaign(campaign, today, currentHour, force = false) {
  * Finds warmup emails, replies, and rescues from spam.
  */
 async function runInboxProcessing() {
+  if (inboxRunning) {
+    console.log('[Engine] Inbox processing already running, skipping.');
+    return;
+  }
+  inboxRunning = true;
   const today = new Date().toISOString().slice(0, 10);
+  try {
   // Process ALL active accounts — both pool (auto-reply) and sender (rescue from spam)
   const accounts = db.prepare('SELECT * FROM accounts WHERE active = 1').all();
   console.log(`[Engine] Processing inboxes for ${accounts.length} account(s)...`);
@@ -177,6 +197,9 @@ async function runInboxProcessing() {
     } catch (err) {
       console.error(`[Engine] Inbox processing failed for ${account.email}:`, err.message);
     }
+  }
+  } finally {
+    inboxRunning = false;
   }
 }
 
