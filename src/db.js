@@ -97,40 +97,60 @@ function initializeSchema() {
 
 function seedDefaultTemplates() {
   const count = db.prepare('SELECT COUNT(*) as c FROM templates').get().c;
-  if (count > 0) return;
+  if (count > 0) {
+    // Replace all existing templates with the improved set
+    db.prepare('DELETE FROM templates').run();
+  }
 
   const subjects = [
-    'Quick question for you',
-    'Following up on our conversation',
-    'Checking in',
-    'Wanted to share something with you',
-    'Hope you\'re doing well',
-    'Touching base',
-    'Quick update',
-    'Just wanted to say hi',
-    'Thoughts on this?',
-    'Any updates on your end?',
-    'Looking forward to connecting',
-    'Great talking the other day',
-    'A quick note',
-    'Circling back',
-    'Dropping a line',
+    'Hey, been a while!',
+    'Quick one',
+    'Catching up',
+    'How\'s everything going?',
+    'Wanted to reach out',
+    'Random thought',
+    'Hope you\'re well',
+    'Quick question',
+    'Checking in on you',
+    'Something I wanted to share',
+    'Miss our chats',
+    'How did things turn out?',
+    'Thinking of you',
+    'Any news on your end?',
+    'Still thinking about what you said',
+    'How\'s the family?',
+    'Long time no speak',
+    'Just saw something that reminded me of you',
+    'Weekend plans?',
+    'Quick update from my end',
+    'Had a thought about our last chat',
+    'You free to chat soon?',
+    'Following up',
+    'Wanted your opinion on something',
+    'Hope things are going great',
   ];
 
   const bodies = [
-    `Hi there,\n\nI hope this message finds you well. I wanted to reach out and see if we could catch up soon. It's been a while since we last connected.\n\nLooking forward to hearing from you!\n\nBest regards`,
-    `Hello,\n\nJust checking in to see how things are going on your end. I've been meaning to get in touch for a while.\n\nWould love to hear your thoughts when you have a moment.\n\nWarm regards`,
-    `Hi,\n\nI hope your week is off to a great start! I was thinking about our last conversation and wanted to follow up.\n\nLet me know if you have any questions or if there's anything I can help with.\n\nThanks`,
-    `Hello,\n\nHope all is well with you. I wanted to reach out and share a quick update. Things have been busy on my end but I wanted to make sure we stay in touch.\n\nFeel free to reply whenever it's convenient for you.\n\nBest`,
-    `Hi,\n\nJust a quick note to say hello and see how you're doing. I always enjoy our conversations and thought it was time to reconnect.\n\nHope to hear from you soon!\n\nKind regards`,
+    `Hey,\n\nHope things are going well on your end! Been meaning to reach out for a while now. Life's been pretty hectic but I finally found a moment to check in.\n\nHow's everything with you? Would love to catch up sometime soon.\n\nTake care`,
+    `Hi,\n\nJust thinking about you and figured I'd drop a quick message. It's been too long since we properly caught up!\n\nHow have things been? Anything exciting happening on your end?\n\nCheers`,
+    `Hey there,\n\nHope your week is treating you well! I had a quick thought and figured you'd be the right person to ask.\n\nWould love to get your perspective when you have a free moment. No rush at all!\n\nThanks`,
+    `Hi,\n\nQuick note to say I've been thinking about our last conversation. Really stuck with me!\n\nHope everything's going smoothly for you. Let me know if you ever want to connect.\n\nBest`,
+    `Hey,\n\nFinally getting around to sending this message I've been meaning to write for weeks!\n\nHope life is treating you well. Would be great to hear what you've been up to lately.\n\nWarm wishes`,
+    `Hi there,\n\nJust saw something today that immediately made me think of you. Hope that's not too random!\n\nHow are things going? Would be great to catch up soon.\n\nAll the best`,
+    `Hey,\n\nHope you're having a fantastic week so far! Just wanted to reach out and stay in touch.\n\nThings are good on my end — busy as always but can't complain.\n\nLet me know how you're doing when you get a chance!\n\nCheers`,
+    `Hi,\n\nI know it's been a while since we last spoke, but I was thinking about you and wanted to check in.\n\nHope everything is going well. Would love to reconnect sometime soon!\n\nTake care`,
+    `Hey,\n\nRandom midweek message — hope that's okay! Just wanted to see how you've been doing.\n\nLife's been pretty eventful on my end. Lots going on but all good things!\n\nHope we can catch up soon.\n\nBest`,
+    `Hi,\n\nHope this finds you in good spirits! I've been meaning to get in touch for ages.\n\nWould love to hear what you've been up to. Feel free to reply whenever you get a moment.\n\nWarm regards`,
   ];
 
   const replies = [
-    `Thanks for reaching out! Great to hear from you.\n\nI'll get back to you with more details soon.\n\nBest`,
-    `Hi,\n\nThanks for your message! Always good to hear from you.\n\nLooking forward to staying in touch.\n\nBest regards`,
-    `Hello,\n\nGreat to hear from you! Thanks for the update.\n\nWill be in touch soon.\n\nThanks`,
-    `Hi there,\n\nThanks for reaching out. Really appreciate it!\n\nChat soon.\n\nBest`,
-    `Hello,\n\nThanks for your note! Really appreciated hearing from you.\n\nTalk soon!\n\nWarm regards`,
+    `Hey!\n\nSo great to hear from you! Thanks for reaching out — made my day.\n\nThings are going well here, keeping busy as usual. Would love to catch up properly soon!\n\nTalk soon`,
+    `Hi,\n\nThanks for your message! Always a pleasure hearing from you.\n\nI'll get back to you with more details shortly. Hope you're having a great week!\n\nCheers`,
+    `Hey,\n\nSo glad you reached out! I've been meaning to get in touch too.\n\nLet's definitely find a time to catch up. I'll reach out again soon!\n\nBest`,
+    `Hi there,\n\nGreat to hear from you! Thanks for the message.\n\nThings are going really well on my end. Would love to hear more about what you've been up to!\n\nTake care`,
+    `Hey!\n\nThanks for dropping a line — always good to hear from you.\n\nI'll be in touch soon with more. Hope all is well!\n\nWarm regards`,
+    `Hi,\n\nReally appreciate you reaching out! It's been too long.\n\nLooking forward to catching up properly. I'll follow up soon!\n\nBest wishes`,
+    `Hey,\n\nThanks so much for your message! Brought a smile to my face.\n\nWill definitely get back to you with more soon. Hope you're having a wonderful day!\n\nCheers`,
   ];
 
   const insert = db.prepare('INSERT INTO templates (type, content) VALUES (?, ?)');
