@@ -43,7 +43,8 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'account_id and name are required.' });
   }
 
-  const account = db.prepare('SELECT id FROM accounts WHERE id = ?').get(account_id);
+  const account = db.prepare('SELECT id FROM accounts WHERE id = ? AND role = "sender"').get(account_id);
+  if (!account) return res.status(404).json({ error: 'Sender account not found. Make sure the account role is set to Sender.' });
   if (!account) return res.status(404).json({ error: 'Account not found.' });
 
   const id = uuidv4();

@@ -103,51 +103,69 @@ async function loadDashboard() {
 
 // ── Accounts ──────────────────────────────────
 
-async function loadAccounts() {
-  const accounts = await api('/api/accounts');
-  const list = document.getElementById('accounts-list');
-  list.innerHTML = '';
-
-  if (accounts.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-muted)">No accounts yet. Add an account to get started.</p>';
-    return;
-  }
-
-  accounts.forEach(acc => {
-    list.insertAdjacentHTML('beforeend', `
-      <div class="account-card">
-        <div class="card-icon">&#9993;</div>
-        <div class="card-info">
-          <div class="card-title">${acc.name} &lt;${acc.email}&gt;</div>
-          <div class="card-meta">SMTP: ${acc.smtp_host}:${acc.smtp_port} &bull; IMAP: ${acc.imap_host}:${acc.imap_port}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="testAccount('${acc.id}')">Test</button>
-          <button class="btn btn-secondary btn-sm" onclick="toggleAccount('${acc.id}', ${acc.active})">
-            ${acc.active ? 'Disable' : 'Enable'}
-          </button>
-          <button class="btn btn-danger btn-sm" onclick="deleteAccount('${acc.id}')">Delete</button>
-        </div>
+function accountCardHTML(acc) {
+  const roleTag = acc.role === 'sender'
+    ? '<span class="badge badge-active">Sender</span>'
+    : '<span class="badge badge-completed">Pool</span>';
+  return `
+    <div class="account-card">
+      <div class="card-icon">${acc.role === 'sender' ? '&#128640;' : '&#9993;'}</div>
+      <div class="card-info">
+        <div class="card-title">${acc.name} &lt;${acc.email}&gt; ${roleTag}</div>
+        <div class="card-meta">SMTP: ${acc.smtp_host}:${acc.smtp_port} &bull; IMAP: ${acc.imap_host}:${acc.imap_port} &bull; ${acc.active ? 'Active' : 'Disabled'}</div>
       </div>
-    `);
-  });
+      <div class="card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="testAccount('${acc.id}')">Test</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAccount('${acc.id}', ${acc.active})">
+          ${acc.active ? 'Disable' : 'Enable'}
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAccount('${acc.id}')">Delete</button>
+      </div>
+    </div>
+  `;
 }
 
-document.getElementById('btn-add-account').addEventListener('click', () => {
-  showModal('Add Email Account', `
+async function loadAccounts() {
+  const accounts = await api('/api/accounts');
+  const senders = accounts.filter(a => a.role === 'sender');
+  const pool    = accounts.filter(a => a.role === 'pool');
+
+  const senderList = document.getElementById('senders-list');
+  const poolList   = document.getElementById('pool-list');
+
+  senderList.innerHTML = senders.length === 0
+    ? '<p style="color:var(--text-muted)">No sender accounts yet. Add the email address you want to warm up.</p>'
+    : senders.map(accountCardHTML).join('');
+
+  poolList.innerHTML = pool.length === 0
+    ? '<p style="color:var(--text-muted)">No pool accounts yet. Add personal Gmail or Outlook accounts here.</p>'
+    : pool.map(accountCardHTML).join('');
+
+  window._accounts = accounts;
+}
+
+function showAccountModal(role) {
+  const title = role === 'sender' ? 'Add Sender Account' : 'Add Pool Account';
+  const hostPlaceholder = role === 'sender' ? 'smtp.gmail.com' : 'smtp.gmail.com';
+  showModal(title, `
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px">
+      ${role === 'sender'
+        ? 'This is the account you want to warm up. Campaigns will send emails from this address.'
+        : 'This account will receive warmup emails and auto-reply. Use a personal Gmail or Outlook account.'}
+    </p>
     <div class="form-group"><label>Display Name</label><input id="f-name" placeholder="John Smith" /></div>
     <div class="form-group"><label>Email Address</label><input id="f-email" type="email" placeholder="john@example.com" /></div>
     <div class="form-group"><label>Username (usually same as email)</label><input id="f-user" placeholder="john@example.com" /></div>
     <div class="form-group"><label>Password / App Password</label><input id="f-pass" type="password" /></div>
     <div class="form-row">
-      <div class="form-group"><label>SMTP Host</label><input id="f-smtp-host" placeholder="smtp.gmail.com" /></div>
+      <div class="form-group"><label>SMTP Host</label><input id="f-smtp-host" placeholder="${hostPlaceholder}" /></div>
       <div class="form-group"><label>SMTP Port</label><input id="f-smtp-port" type="number" value="465" /></div>
     </div>
     <div class="form-group">
       <label>SMTP Security</label>
       <select id="f-smtp-secure">
-        <option value="1" selected>SSL (port 465) — recommended for Railway</option>
-        <option value="0">TLS/STARTTLS (port 587)</option>
+        <option value="1" selected>SSL — port 465 (recommended)</option>
+        <option value="0">TLS/STARTTLS — port 587</option>
       </select>
     </div>
     <div class="form-row">
@@ -156,17 +174,21 @@ document.getElementById('btn-add-account').addEventListener('click', () => {
     </div>
     <div class="form-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitAccount()">Add Account</button>
+      <button class="btn btn-primary" onclick="submitAccount('${role}')">Add Account</button>
     </div>
   `);
-});
+}
 
-async function submitAccount() {
+document.getElementById('btn-add-sender').addEventListener('click', () => showAccountModal('sender'));
+document.getElementById('btn-add-pool').addEventListener('click',   () => showAccountModal('pool'));
+
+async function submitAccount(role) {
   const body = {
-    name:      document.getElementById('f-name').value.trim(),
-    email:     document.getElementById('f-email').value.trim(),
-    username:  document.getElementById('f-user').value.trim(),
-    password:  document.getElementById('f-pass').value,
+    role,
+    name:        document.getElementById('f-name').value.trim(),
+    email:       document.getElementById('f-email').value.trim(),
+    username:    document.getElementById('f-user').value.trim(),
+    password:    document.getElementById('f-pass').value,
     smtp_host:   document.getElementById('f-smtp-host').value.trim(),
     smtp_port:   parseInt(document.getElementById('f-smtp-port').value),
     smtp_secure: parseInt(document.getElementById('f-smtp-secure').value),
@@ -176,7 +198,7 @@ async function submitAccount() {
   try {
     await api('/api/accounts', { method: 'POST', body });
     closeModal();
-    toast('Account added!');
+    toast(`${role === 'sender' ? 'Sender' : 'Pool'} account added!`);
     loadAccounts();
   } catch (err) { toast(err.message, 'error'); }
 }
@@ -245,11 +267,12 @@ async function loadCampaigns() {
 
 document.getElementById('btn-add-campaign').addEventListener('click', async () => {
   const accounts = window._accounts || await api('/api/accounts');
-  if (accounts.length === 0) {
-    toast('Add at least one account first.', 'error');
+  const senders = accounts.filter(a => a.role === 'sender');
+  if (senders.length === 0) {
+    toast('Add at least one Sender account first.', 'error');
     return;
   }
-  const options = accounts.map(a => `<option value="${a.id}">${a.name} &lt;${a.email}&gt;</option>`).join('');
+  const options = senders.map(a => `<option value="${a.id}">${a.name} &lt;${a.email}&gt;</option>`).join('');
   showModal('New Warmup Campaign', `
     <div class="form-group"><label>Campaign Name</label><input id="f-cname" placeholder="My Gmail Warmup" /></div>
     <div class="form-group"><label>Account to Warm Up</label><select id="f-account">${options}</select></div>

@@ -76,10 +76,10 @@ async function processCampaign(campaign, today, currentHour, force = false) {
   const remaining = campaign.daily_target - campaign.emails_sent_today;
   const sendNow = Math.min(remaining, Math.floor(Math.random() * 3) + 1);
 
-  // Get pool accounts (all active accounts except the campaign owner)
+  // Get pool accounts (active pool/receiver accounts only)
   const pool = db.prepare(`
-    SELECT * FROM accounts WHERE active = 1 AND id != ?
-  `).all(campaign.account_id);
+    SELECT * FROM accounts WHERE active = 1 AND role = 'pool'
+  `).all();
 
   if (pool.length === 0) {
     console.warn(`[Engine] Campaign ${campaign.campaign_id}: no pool accounts available.`);

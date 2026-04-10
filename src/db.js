@@ -20,10 +20,11 @@ function initializeSchema() {
       id          TEXT PRIMARY KEY,
       email       TEXT UNIQUE NOT NULL,
       name        TEXT NOT NULL,
+      role        TEXT NOT NULL DEFAULT 'pool', -- 'sender' = account being warmed | 'pool' = receiver/responder
       -- SMTP settings
       smtp_host   TEXT NOT NULL,
-      smtp_port   INTEGER NOT NULL DEFAULT 587,
-      smtp_secure INTEGER NOT NULL DEFAULT 0,
+      smtp_port   INTEGER NOT NULL DEFAULT 465,
+      smtp_secure INTEGER NOT NULL DEFAULT 1,
       -- IMAP settings
       imap_host   TEXT NOT NULL,
       imap_port   INTEGER NOT NULL DEFAULT 993,

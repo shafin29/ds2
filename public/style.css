@@ -299,6 +299,21 @@ h3 { font-size: 1rem; margin: 24px 0 12px; color: var(--text-muted); }
 
 canvas { max-width: 100%; }
 
+/* ── Section header ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.section-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
 /* ── Templates ── */
 .template-tabs {
   display: flex;

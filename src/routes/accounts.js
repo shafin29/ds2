@@ -18,8 +18,8 @@ router.get('/', (req, res) => {
 // POST /api/accounts — add a new account
 router.post('/', async (req, res) => {
   const {
-    email, name,
-    smtp_host, smtp_port = 587, smtp_secure = false,
+    email, name, role = 'pool',
+    smtp_host, smtp_port = 465, smtp_secure = true,
     imap_host, imap_port = 993,
     username, password,
   } = req.body;
@@ -28,16 +28,20 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
+  if (!['sender', 'pool'].includes(role)) {
+    return res.status(400).json({ error: 'role must be sender or pool.' });
+  }
+
   const id = uuidv4();
   try {
     db.prepare(`
-      INSERT INTO accounts (id, email, name, smtp_host, smtp_port, smtp_secure,
+      INSERT INTO accounts (id, email, name, role, smtp_host, smtp_port, smtp_secure,
                             imap_host, imap_port, username, password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, email, name, smtp_host, smtp_port, smtp_secure ? 1 : 0,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, email, name, role, smtp_host, smtp_port, smtp_secure ? 1 : 0,
            imap_host, imap_port, username, password);
 
-    const account = db.prepare('SELECT id, email, name, active, created_at FROM accounts WHERE id = ?').get(id);
+    const account = db.prepare('SELECT id, email, name, role, active, created_at FROM accounts WHERE id = ?').get(id);
     res.status(201).json(account);
   } catch (err) {
     if (err.message.includes('UNIQUE')) {
@@ -53,7 +57,7 @@ router.patch('/:id', (req, res) => {
   const account = db.prepare('SELECT * FROM accounts WHERE id = ?').get(id);
   if (!account) return res.status(404).json({ error: 'Account not found.' });
 
-  const fields = ['name', 'smtp_host', 'smtp_port', 'smtp_secure', 'imap_host', 'imap_port', 'username', 'password', 'active'];
+  const fields = ['name', 'role', 'smtp_host', 'smtp_port', 'smtp_secure', 'imap_host', 'imap_port', 'username', 'password', 'active'];
   const updates = [];
   const values = [];
 

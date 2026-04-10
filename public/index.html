@@ -39,10 +39,28 @@
     <!-- Accounts Page -->
     <div id="page-accounts" class="page">
       <div class="page-header">
-        <h1>Email Accounts</h1>
-        <button class="btn btn-primary" id="btn-add-account">+ Add Account</button>
+        <h1>Accounts</h1>
       </div>
-      <div id="accounts-list" class="card-list"></div>
+
+      <!-- Sender Accounts -->
+      <div class="section-header">
+        <div>
+          <h2 style="margin:0">Sender Accounts</h2>
+          <p class="section-desc">The email addresses being warmed up. Campaigns are created for these accounts.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-add-sender">+ Add Sender</button>
+      </div>
+      <div id="senders-list" class="card-list"></div>
+
+      <!-- Pool Accounts -->
+      <div class="section-header" style="margin-top:36px">
+        <div>
+          <h2 style="margin:0">Pool Accounts</h2>
+          <p class="section-desc">Receiver accounts that receive warmup emails and auto-reply. Use personal Gmail/Outlook accounts here.</p>
+        </div>
+        <button class="btn btn-secondary" id="btn-add-pool">+ Add Pool Account</button>
+      </div>
+      <div id="pool-list" class="card-list"></div>
     </div>
 
     <!-- Campaigns Page -->
