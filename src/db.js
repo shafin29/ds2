@@ -165,10 +165,6 @@ function seedDefaultTemplates() {
   insertMany();
 }
 
-initializeSchema();
-runMigrations();
-seedDefaultTemplates();
-
 function runMigrations() {
   // Add role column if it doesn't exist (migration for existing databases)
   const cols = db.prepare("PRAGMA table_info(accounts)").all().map(c => c.name);
@@ -182,5 +178,9 @@ function runMigrations() {
     console.log('[DB] Migration: added smtp_secure column to accounts');
   }
 }
+
+initializeSchema();
+runMigrations();
+seedDefaultTemplates();
 
 module.exports = db;
