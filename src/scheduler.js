@@ -13,15 +13,6 @@ function start() {
   if (isRunning) return;
   isRunning = true;
 
-  // Run an initial cycle immediately on startup (force = bypass time window)
-  console.log('[Scheduler] Running initial warmup cycle on startup...');
-  runWarmupCycle(true).catch(err =>
-    console.error('[Scheduler] Initial cycle error:', err.message)
-  );
-  runInboxProcessing().catch(err =>
-    console.error('[Scheduler] Initial inbox error:', err.message)
-  );
-
   // Send warmup emails every 20 minutes
   // (actual sending is gated by each campaign's hour window)
   sendJob = cron.schedule('*/20 * * * *', async () => {
