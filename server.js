@@ -5,6 +5,7 @@ const path = require('path');
 const accountsRouter   = require('./src/routes/accounts');
 const campaignsRouter  = require('./src/routes/campaigns');
 const analyticsRouter  = require('./src/routes/analytics');
+const templatesRouter  = require('./src/routes/templates');
 const scheduler        = require('./src/scheduler');
 
 const app  = express();
@@ -18,6 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/accounts',   accountsRouter);
 app.use('/api/campaigns',  campaignsRouter);
 app.use('/api/analytics',  analyticsRouter);
+app.use('/api/templates',  templatesRouter);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));

@@ -49,6 +49,7 @@ function navigateTo(page) {
   if (page === 'dashboard') loadDashboard();
   if (page === 'accounts')  loadAccounts();
   if (page === 'campaigns') loadCampaigns();
+  if (page === 'templates') loadTemplates(currentTemplateType);
 }
 
 // ── Dashboard ─────────────────────────────────
@@ -405,6 +406,113 @@ document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
 });
+
+// ── Templates ─────────────────────────────────
+
+let currentTemplateType = 'subject';
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTemplateType = btn.dataset.type;
+    loadTemplates(currentTemplateType);
+  });
+});
+
+async function loadTemplates(type = 'subject') {
+  const templates = await api(`/api/templates?type=${type}`);
+  const list = document.getElementById('templates-list');
+  list.innerHTML = '';
+
+  if (templates.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted)">No templates yet. Click "+ Add Template" to create one.</p>';
+    return;
+  }
+
+  templates.forEach(t => {
+    list.insertAdjacentHTML('beforeend', `
+      <div class="template-card ${t.active ? '' : 'inactive'}">
+        <div class="template-content">${t.content.replace(/</g, '&lt;')}</div>
+        <div class="template-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editTemplate(${t.id}, \`${t.content.replace(/`/g, '\\`')}\`)">Edit</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleTemplate(${t.id}, ${t.active})">
+            ${t.active ? 'Disable' : 'Enable'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">Delete</button>
+        </div>
+      </div>
+    `);
+  });
+}
+
+document.getElementById('btn-add-template').addEventListener('click', () => {
+  const typeLabel = { subject: 'Subject Line', body: 'Email Body', reply: 'Reply Body' }[currentTemplateType];
+  showModal(`Add ${typeLabel}`, `
+    <div class="form-group">
+      <label>${typeLabel}</label>
+      ${currentTemplateType === 'subject'
+        ? `<input id="f-tcontent" placeholder="Enter subject line..." />`
+        : `<textarea id="f-tcontent" placeholder="Enter email body...&#10;&#10;Use natural conversational language."></textarea>`
+      }
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTemplate()">Add</button>
+    </div>
+  `);
+});
+
+async function submitTemplate() {
+  const content = document.getElementById('f-tcontent').value.trim();
+  if (!content) { toast('Content cannot be empty.', 'error'); return; }
+  try {
+    await api('/api/templates', { method: 'POST', body: { type: currentTemplateType, content } });
+    closeModal();
+    toast('Template added!');
+    loadTemplates(currentTemplateType);
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function editTemplate(id, currentContent) {
+  const typeLabel = { subject: 'Subject Line', body: 'Email Body', reply: 'Reply Body' }[currentTemplateType];
+  showModal(`Edit ${typeLabel}`, `
+    <div class="form-group">
+      <label>${typeLabel}</label>
+      ${currentTemplateType === 'subject'
+        ? `<input id="f-tedit" value="${currentContent.replace(/"/g, '&quot;')}" />`
+        : `<textarea id="f-tedit">${currentContent.replace(/</g, '&lt;')}</textarea>`
+      }
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTemplate(${id})">Save</button>
+    </div>
+  `);
+}
+
+async function saveTemplate(id) {
+  const content = document.getElementById('f-tedit').value.trim();
+  if (!content) { toast('Content cannot be empty.', 'error'); return; }
+  try {
+    await api(`/api/templates/${id}`, { method: 'PATCH', body: { content } });
+    closeModal();
+    toast('Template saved!');
+    loadTemplates(currentTemplateType);
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function toggleTemplate(id, active) {
+  await api(`/api/templates/${id}`, { method: 'PATCH', body: { active: active ? 0 : 1 } });
+  loadTemplates(currentTemplateType);
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  await api(`/api/templates/${id}`, { method: 'DELETE' });
+  toast('Template deleted');
+  loadTemplates(currentTemplateType);
+}
 
 // ── Init ──────────────────────────────────────
 

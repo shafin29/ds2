@@ -83,9 +83,66 @@ function initializeSchema() {
       rescued     INTEGER NOT NULL DEFAULT 0,
       UNIQUE(campaign_id, date)
     );
+
+    -- Email templates (subjects and bodies)
+    CREATE TABLE IF NOT EXISTS templates (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      type       TEXT NOT NULL CHECK(type IN ('subject', 'body', 'reply')),
+      content    TEXT NOT NULL,
+      active     INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 
+function seedDefaultTemplates() {
+  const count = db.prepare('SELECT COUNT(*) as c FROM templates').get().c;
+  if (count > 0) return;
+
+  const subjects = [
+    'Quick question for you',
+    'Following up on our conversation',
+    'Checking in',
+    'Wanted to share something with you',
+    'Hope you\'re doing well',
+    'Touching base',
+    'Quick update',
+    'Just wanted to say hi',
+    'Thoughts on this?',
+    'Any updates on your end?',
+    'Looking forward to connecting',
+    'Great talking the other day',
+    'A quick note',
+    'Circling back',
+    'Dropping a line',
+  ];
+
+  const bodies = [
+    `Hi there,\n\nI hope this message finds you well. I wanted to reach out and see if we could catch up soon. It's been a while since we last connected.\n\nLooking forward to hearing from you!\n\nBest regards`,
+    `Hello,\n\nJust checking in to see how things are going on your end. I've been meaning to get in touch for a while.\n\nWould love to hear your thoughts when you have a moment.\n\nWarm regards`,
+    `Hi,\n\nI hope your week is off to a great start! I was thinking about our last conversation and wanted to follow up.\n\nLet me know if you have any questions or if there's anything I can help with.\n\nThanks`,
+    `Hello,\n\nHope all is well with you. I wanted to reach out and share a quick update. Things have been busy on my end but I wanted to make sure we stay in touch.\n\nFeel free to reply whenever it's convenient for you.\n\nBest`,
+    `Hi,\n\nJust a quick note to say hello and see how you're doing. I always enjoy our conversations and thought it was time to reconnect.\n\nHope to hear from you soon!\n\nKind regards`,
+  ];
+
+  const replies = [
+    `Thanks for reaching out! Great to hear from you.\n\nI'll get back to you with more details soon.\n\nBest`,
+    `Hi,\n\nThanks for your message! Always good to hear from you.\n\nLooking forward to staying in touch.\n\nBest regards`,
+    `Hello,\n\nGreat to hear from you! Thanks for the update.\n\nWill be in touch soon.\n\nThanks`,
+    `Hi there,\n\nThanks for reaching out. Really appreciate it!\n\nChat soon.\n\nBest`,
+    `Hello,\n\nThanks for your note! Really appreciated hearing from you.\n\nTalk soon!\n\nWarm regards`,
+  ];
+
+  const insert = db.prepare('INSERT INTO templates (type, content) VALUES (?, ?)');
+  const insertMany = db.transaction(() => {
+    subjects.forEach(s => insert.run('subject', s));
+    bodies.forEach(b => insert.run('body', b));
+    replies.forEach(r => insert.run('reply', r));
+  });
+  insertMany();
+}
+
 initializeSchema();
+seedDefaultTemplates();
 
 module.exports = db;

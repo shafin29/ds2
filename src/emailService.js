@@ -1,45 +1,14 @@
 const nodemailer = require('nodemailer');
 const { ImapFlow } = require('imapflow');
-
-// Rotating subject lines and body templates to keep emails looking natural
-const SUBJECTS = [
-  'Quick question for you',
-  'Following up on our conversation',
-  'Checking in',
-  'Wanted to share something with you',
-  'Hope you\'re doing well',
-  'Touching base',
-  'Quick update',
-  'Just wanted to say hi',
-  'Thoughts on this?',
-  'Any updates on your end?',
-  'Looking forward to connecting',
-  'Great talking the other day',
-  'A quick note',
-  'Circling back',
-  'Dropping a line',
-];
-
-const BODIES = [
-  `Hi there,\n\nI hope this message finds you well. I wanted to reach out and see if we could catch up soon. It's been a while since we last connected.\n\nLooking forward to hearing from you!\n\nBest regards`,
-  `Hello,\n\nJust checking in to see how things are going on your end. I've been meaning to get in touch for a while.\n\nWould love to hear your thoughts when you have a moment.\n\nWarm regards`,
-  `Hi,\n\nI hope your week is off to a great start! I was thinking about our last conversation and wanted to follow up.\n\nLet me know if you have any questions or if there's anything I can help with.\n\nThanks`,
-  `Hello,\n\nHope all is well with you. I wanted to reach out and share a quick update. Things have been busy on my end but I wanted to make sure we stay in touch.\n\nFeel free to reply whenever it's convenient for you.\n\nBest`,
-  `Hi,\n\nJust a quick note to say hello and see how you're doing. I always enjoy our conversations and thought it was time to reconnect.\n\nHope to hear from you soon!\n\nKind regards`,
-  `Hello,\n\nI hope you're having a fantastic day! I've been thinking about our recent discussions and wanted to follow up with a few thoughts.\n\nWould love to get your perspective on things when you have a chance.\n\nAll the best`,
-  `Hi there,\n\nDrooping you a quick line to stay in touch. Things are going well on my end and I hope the same is true for you.\n\nLooking forward to our next conversation!\n\nWarmly`,
-];
-
-const REPLY_BODIES = [
-  `Thanks for reaching out! Great to hear from you.\n\nI'll get back to you with more details soon.\n\nBest`,
-  `Hi,\n\nThanks for your message! Always good to hear from you.\n\nLooking forward to staying in touch.\n\nBest regards`,
-  `Hello,\n\nGreat to hear from you! Thanks for the update.\n\nWill be in touch soon.\n\nThanks`,
-  `Hi there,\n\nThanks for reaching out. Really appreciate it!\n\nChat soon.\n\nBest`,
-  `Hello,\n\nThanks for your note! Really appreciated hearing from you.\n\nTalk soon!\n\nWarm regards`,
-];
+const db = require('./db');
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getTemplates(type) {
+  const rows = db.prepare('SELECT content FROM templates WHERE type = ? AND active = 1').all(type);
+  return rows.map(r => r.content);
 }
 
 /**
@@ -64,8 +33,8 @@ function createTransporter(account) {
  */
 async function sendWarmupEmail(fromAccount, toAccount) {
   const transporter = createTransporter(fromAccount);
-  const subject = pickRandom(SUBJECTS);
-  const body = pickRandom(BODIES);
+  const subject = pickRandom(getTemplates('subject'));
+  const body = pickRandom(getTemplates('body'));
 
   const info = await transporter.sendMail({
     from: `"${fromAccount.name}" <${fromAccount.email}>`,
@@ -161,7 +130,7 @@ async function processInbox(account) {
             from: `"${account.name}" <${account.email}>`,
             to: replyTo,
             subject: `Re: ${msg.subject || ''}`,
-            text: pickRandom(REPLY_BODIES) + `\n\n${account.name}`,
+            text: pickRandom(getTemplates('reply')) + `\n\n${account.name}`,
             inReplyTo: msg.messageId,
             references: msg.messageId,
             headers: { 'X-Warmup': '1' },

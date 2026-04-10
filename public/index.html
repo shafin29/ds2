@@ -16,6 +16,7 @@
       <li><a href="#" class="nav-link active" data-page="dashboard">Dashboard</a></li>
       <li><a href="#" class="nav-link" data-page="accounts">Accounts</a></li>
       <li><a href="#" class="nav-link" data-page="campaigns">Campaigns</a></li>
+      <li><a href="#" class="nav-link" data-page="templates">Templates</a></li>
     </ul>
   </nav>
 
@@ -53,6 +54,20 @@
       <div id="campaigns-list" class="card-list"></div>
     </div>
   </main>
+
+    <!-- Templates Page -->
+    <div id="page-templates" class="page">
+      <div class="page-header">
+        <h1>Email Templates</h1>
+        <button class="btn btn-primary" id="btn-add-template">+ Add Template</button>
+      </div>
+      <div class="template-tabs">
+        <button class="tab-btn active" data-type="subject">Subject Lines</button>
+        <button class="tab-btn" data-type="body">Email Bodies</button>
+        <button class="tab-btn" data-type="reply">Reply Bodies</button>
+      </div>
+      <div id="templates-list" class="templates-list"></div>
+    </div>
 
   <!-- Modal -->
   <div id="modal-overlay" class="modal-overlay hidden">
