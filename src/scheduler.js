@@ -13,9 +13,18 @@ function start() {
   if (isRunning) return;
   isRunning = true;
 
-  // Send warmup emails every 30 minutes during typical business hours
+  // Run an initial cycle immediately on startup (force = bypass time window)
+  console.log('[Scheduler] Running initial warmup cycle on startup...');
+  runWarmupCycle(true).catch(err =>
+    console.error('[Scheduler] Initial cycle error:', err.message)
+  );
+  runInboxProcessing().catch(err =>
+    console.error('[Scheduler] Initial inbox error:', err.message)
+  );
+
+  // Send warmup emails every 20 minutes
   // (actual sending is gated by each campaign's hour window)
-  sendJob = cron.schedule('*/30 * * * *', async () => {
+  sendJob = cron.schedule('*/20 * * * *', async () => {
     console.log('[Scheduler] Running warmup send cycle...');
     try {
       await runWarmupCycle();
@@ -24,8 +33,8 @@ function start() {
     }
   });
 
-  // Process inboxes (reply + rescue from spam) every hour
-  inboxJob = cron.schedule('0 * * * *', async () => {
+  // Process inboxes (reply + rescue from spam) every 30 minutes
+  inboxJob = cron.schedule('*/30 * * * *', async () => {
     console.log('[Scheduler] Running inbox processing...');
     try {
       await runInboxProcessing();
@@ -34,7 +43,7 @@ function start() {
     }
   });
 
-  console.log('[Scheduler] Started — send cycle: every 30min, inbox: every 1hr');
+  console.log('[Scheduler] Started — send cycle: every 20min, inbox: every 30min');
 }
 
 function stop() {

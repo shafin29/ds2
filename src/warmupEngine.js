@@ -135,7 +135,9 @@ async function processCampaign(campaign, today, currentHour, force = false) {
  */
 async function runInboxProcessing() {
   const today = new Date().toISOString().slice(0, 10);
+  // Process ALL active accounts — both pool (auto-reply) and sender (rescue from spam)
   const accounts = db.prepare('SELECT * FROM accounts WHERE active = 1').all();
+  console.log(`[Engine] Processing inboxes for ${accounts.length} account(s)...`);
 
   for (const account of accounts) {
     try {

@@ -55,6 +55,14 @@ router.post('/', (req, res) => {
   `).run(id, account_id, name, daily_target, max_per_day, ramp_increment, send_hour_start, send_hour_end);
 
   const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(id);
+
+  // Kick off first warmup cycle immediately in background (force = bypass time window)
+  setImmediate(() => {
+    runWarmupCycle(true).catch(err =>
+      console.error('[Engine] Auto-start warmup failed:', err.message)
+    );
+  });
+
   res.status(201).json(campaign);
 });
 
