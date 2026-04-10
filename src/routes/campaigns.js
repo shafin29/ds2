@@ -95,7 +95,7 @@ router.post('/:id/trigger', async (req, res) => {
   if (!campaign) return res.status(404).json({ error: 'Campaign not found.' });
 
   try {
-    await runWarmupCycle();
+    await runWarmupCycle(true); // force = bypass time window
     res.json({ ok: true, message: 'Warmup cycle triggered.' });
   } catch (err) {
     res.status(500).json({ error: err.message });

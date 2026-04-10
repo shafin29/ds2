@@ -14,8 +14,9 @@ const { sendWarmupEmail, processInbox } = require('./emailService');
 
 /**
  * Run one warmup cycle. Called by the scheduler every hour (or manually).
+ * @param {boolean} force - skip time window check (for manual triggers)
  */
-async function runWarmupCycle() {
+async function runWarmupCycle(force = false) {
   const today = new Date().toISOString().slice(0, 10);
   const currentHour = new Date().getHours();
 
@@ -30,16 +31,17 @@ async function runWarmupCycle() {
 
   for (const campaign of campaigns) {
     try {
-      await processCampaign(campaign, today, currentHour);
+      await processCampaign(campaign, today, currentHour, force);
     } catch (err) {
       console.error(`[Engine] Error processing campaign ${campaign.campaign_id}:`, err.message);
     }
   }
 }
 
-async function processCampaign(campaign, today, currentHour) {
-  // Check send window
-  if (currentHour < campaign.send_hour_start || currentHour >= campaign.send_hour_end) {
+async function processCampaign(campaign, today, currentHour, force = false) {
+  // Check send window (skip if manually triggered)
+  if (!force && (currentHour < campaign.send_hour_start || currentHour >= campaign.send_hour_end)) {
+    console.log(`[Engine] Campaign ${campaign.name}: outside send window (${campaign.send_hour_start}:00–${campaign.send_hour_end}:00), skipping.`);
     return;
   }
 
