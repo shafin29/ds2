@@ -8,7 +8,7 @@ const router = express.Router();
 // GET /api/accounts — list all accounts
 router.get('/', (req, res) => {
   const accounts = db.prepare(`
-    SELECT id, email, name, smtp_host, smtp_port, smtp_secure,
+    SELECT id, email, name, role, smtp_host, smtp_port, smtp_secure,
            imap_host, imap_port, username, active, created_at
     FROM accounts ORDER BY created_at DESC
   `).all();
