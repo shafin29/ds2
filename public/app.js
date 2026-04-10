@@ -128,7 +128,7 @@ function accountCardHTML(acc) {
 async function loadAccounts() {
   const accounts = await api('/api/accounts');
   const senders = accounts.filter(a => a.role === 'sender');
-  const pool    = accounts.filter(a => a.role === 'pool');
+  const pool    = accounts.filter(a => a.role === 'pool' || !a.role);
 
   const senderList = document.getElementById('senders-list');
   const poolList   = document.getElementById('pool-list');
