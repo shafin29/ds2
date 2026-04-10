@@ -156,13 +156,22 @@ async function processInbox(account) {
   return stats;
 }
 
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ]);
+}
+
 /**
  * Test SMTP connection for an account. Returns { ok, error }.
  */
 async function testSmtp(account) {
   try {
     const transporter = createTransporter(account);
-    await transporter.verify();
+    await withTimeout(transporter.verify(), 10000, 'SMTP');
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -180,9 +189,11 @@ async function testImap(account) {
     auth: { user: account.username, pass: account.password },
     logger: false,
     tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
   });
   try {
-    await client.connect();
+    await withTimeout(client.connect(), 10000, 'IMAP');
     await client.logout();
     return { ok: true };
   } catch (err) {
