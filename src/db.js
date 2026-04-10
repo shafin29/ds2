@@ -166,6 +166,21 @@ function seedDefaultTemplates() {
 }
 
 initializeSchema();
+runMigrations();
 seedDefaultTemplates();
+
+function runMigrations() {
+  // Add role column if it doesn't exist (migration for existing databases)
+  const cols = db.prepare("PRAGMA table_info(accounts)").all().map(c => c.name);
+  if (!cols.includes('role')) {
+    db.exec("ALTER TABLE accounts ADD COLUMN role TEXT NOT NULL DEFAULT 'pool'");
+    console.log('[DB] Migration: added role column to accounts');
+  }
+  // Add smtp_secure column if it doesn't exist
+  if (!cols.includes('smtp_secure')) {
+    db.exec("ALTER TABLE accounts ADD COLUMN smtp_secure INTEGER NOT NULL DEFAULT 1");
+    console.log('[DB] Migration: added smtp_secure column to accounts');
+  }
+}
 
 module.exports = db;
