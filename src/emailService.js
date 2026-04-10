@@ -80,8 +80,8 @@ async function processInbox(account) {
         try {
           const uids = [];
           for await (const msg of client.fetch('1:*', { envelope: true, flags: true, headers: ['x-warmup'] })) {
-            const warmupHeader = msg.headers?.get('x-warmup');
-            if (warmupHeader) {
+            const headersStr = msg.headers?.toString('utf8') || '';
+            if (headersStr.toLowerCase().includes('x-warmup:')) {
               uids.push(msg.uid);
             }
           }
@@ -108,8 +108,8 @@ async function processInbox(account) {
         headers: ['x-warmup', 'message-id', 'from'],
         bodyStructure: true,
       })) {
-        const warmupHeader = msg.headers?.get('x-warmup');
-        if (warmupHeader) {
+        const headersStr = msg.headers?.toString('utf8') || '';
+        if (headersStr.toLowerCase().includes('x-warmup:')) {
           toReply.push({
             uid: msg.uid,
             messageId: msg.envelope?.messageId,
