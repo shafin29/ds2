@@ -204,14 +204,45 @@ async function submitAccount(role) {
 }
 
 async function testAccount(id) {
-  toast('Testing connection…');
+  // Show a persistent modal with results instead of a toast
+  showModal('Testing Connection', `
+    <p id="test-status" style="color:var(--text-muted);margin-bottom:16px">
+      Connecting to SMTP and IMAP... please wait.
+    </p>
+    <div id="test-results"></div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  `);
   try {
     const r = await api(`/api/accounts/${id}/test`, { method: 'POST' });
-    const smtpOk = r.smtp.ok ? '✓ SMTP' : `✗ SMTP: ${r.smtp.error}`;
-    const imapOk = r.imap.ok ? '✓ IMAP' : `✗ IMAP: ${r.imap.error}`;
-    const ok = r.smtp.ok && r.imap.ok;
-    toast(`${smtpOk}  ${imapOk}`, ok ? 'success' : 'error');
-  } catch (err) { toast(err.message, 'error'); }
+    const smtpOk = r.smtp.ok;
+    const imapOk = r.imap.ok;
+    document.getElementById('test-status').textContent = smtpOk && imapOk
+      ? 'All connections successful!'
+      : 'Some connections failed. See details below.';
+    document.getElementById('test-status').style.color = smtpOk && imapOk
+      ? 'var(--green)' : 'var(--red)';
+    document.getElementById('test-results').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid ${smtpOk ? 'var(--green)' : 'var(--red)'}">
+          <strong style="color:${smtpOk ? 'var(--green)' : 'var(--red)'}">
+            ${smtpOk ? '✓' : '✗'} SMTP
+          </strong>
+          ${!smtpOk ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">${r.smtp.error}</div>` : ''}
+        </div>
+        <div style="padding:12px;border-radius:8px;background:var(--surface2);border:1px solid ${imapOk ? 'var(--green)' : 'var(--red)'}">
+          <strong style="color:${imapOk ? 'var(--green)' : 'var(--red)'}">
+            ${imapOk ? '✓' : '✗'} IMAP
+          </strong>
+          ${!imapOk ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">${r.imap.error}</div>` : ''}
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('test-status').textContent = 'Test failed: ' + err.message;
+    document.getElementById('test-status').style.color = 'var(--red)';
+  }
 }
 
 async function toggleAccount(id, active) {
