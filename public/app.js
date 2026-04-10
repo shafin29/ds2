@@ -266,7 +266,7 @@ async function loadCampaigns() {
 }
 
 document.getElementById('btn-add-campaign').addEventListener('click', async () => {
-  const accounts = window._accounts || await api('/api/accounts');
+  const accounts = await api('/api/accounts');
   const senders = accounts.filter(a => a.role === 'sender');
   if (senders.length === 0) {
     toast('Add at least one Sender account first.', 'error');
